@@ -14,12 +14,12 @@ class ViewTests(unittest.TestCase):
         from .views import my_view
         request = testing.DummyRequest()
         info = my_view(request)
-        self.assertEqual(info['project'], 'gmailapi')
+        self.assertEqual(info['project'], 'gmailcrud')
 
 
 class FunctionalTests(unittest.TestCase):
     def setUp(self):
-        from gmailapi import main
+        from gmailcrud import main
         app = main({})
         from webtest import TestApp
         self.testapp = TestApp(app)
