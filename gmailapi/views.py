@@ -16,9 +16,9 @@ flow.params['include_granted_scopes'] = 'true'   # incremental auth
 
 @view_config(route_name='home', renderer='templates/mytemplate.jinja2')
 def index(request):
-	return {"project": "gmailapi test"}
+	return {"projectTitle": "GMAIL API USAGE EXAMPLE"}
 @view_config(route_name='gmail', renderer='templates/mytemplate.jinja2')
-def my_view(request):
+def gmail(request):
 	
 	auth_uri = flow.step1_get_authorize_url()
 	print(auth_uri)
@@ -32,18 +32,11 @@ def connected_view(request):
 	gmail=build('gmail', 'v1', http=http_auth)
 	fields = gmail.users().labels().list(userId='me').execute()
 	messages = gmail.users().messages().list(userId='me', q='').execute()
-	#msg_id=[x['messages'][0] for x in messages if x=='messages']
-	#print(msg_id)
 	message = gmail.users().messages().get(userId='me', id=messages['messages'][0]['id'], format='raw').execute()
 	msg_str = str(base64.urlsafe_b64decode(message['raw'].encode('ASCII')))
 	mime_msg = email.message_from_string(msg_str)
-	#messageMainType = mime_msg.get_content_maintype()
-	#if messageMainType == 'multipart':
-#		for part in mime_msg.get_payload():
-#			if part.get_content_maintype() == 'text':
-#				return part.get_payload()
- #                   return ""
-  #          elif messageMainType == 'text':
-   #                 return mime_msg.get_payload()
+	msg=messages['messages'][0]
+	tdata = gmail.users().threads().get(userId='me', id=messages['messages'][0]['id']).execute()
+	nmsgs = len(tdata['messages'])
 	data=[x['id'] for x in messages['messages']]
-	return {"key": request.params['code'], "results": str(messages)}
+	return {"key": request.params['code'], "results": str(x)}
