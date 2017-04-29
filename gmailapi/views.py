@@ -1,10 +1,8 @@
 from pyramid.view import view_config
 from oauth2client import client
 from pyramid.httpexceptions import HTTPFound
-import httplib2
+import httplib2, base64, email
 from apiclient.discovery import build
-import base64
-import email
 from email.mime.text import MIMEText
 
 flow = client.flow_from_clientsecrets(
@@ -32,9 +30,31 @@ def connected_view(request):
 	http_auth = credentials.authorize(httplib2.Http())
 	gmail=build('gmail', 'v1', http=http_auth)
 	fields = gmail.users().labels().list(userId='me').execute()
+	
+	#GET ALL MESSAGE
 	messages = gmail.users().messages().list(userId='me', q='').execute()
-	message = gmail.users().messages().get(userId='me', id=messages['messages'][0]['id'], format='raw').execute()
-	msg_str = str(base64.urlsafe_b64decode(message['raw'].encode('ASCII')))
-	mime_msg = email.message_from_string(msg_str)
-	data=[x['id'] for x in messages['messages']]
-	return {"key": request.params['code'], "results": str(data)}
+	
+	#GET ALL MESSAGE ID's
+	message_ids=[x['id'] for x in messages['messages']]
+	
+	#GET ONE MESSAGE.
+	message = gmail.users().messages().get(userId='me', id=message_ids[0], format='full').execute()
+	#msg_str = str(base64.urlsafe_b64decode(message[].encode('ASCII')))
+	mime_msg = email.message_from_string(str(message))
+	
+	"""read_message={}
+	if mime_msg.get_content_maintype()=="multipart/alternative":
+		for content in mime_msg.message.walk():
+			if content.get_content_type()=="text/plain":
+				read_message['body']=content.get_payload(decode=True)
+			elif content.get_content_type()=="text/html":
+				read_message['html']=content.get_payload(decode=True)
+	elif mime_msg.get_content_maintype()=="text":
+		read_message['body']=mime_msg.get_payload()"""
+
+	#GET UNREAD MESSAGES
+	unread_messages = gmail.users().messages().list(userId='me',labelIds='UNREAD').execute()
+	
+	#GET UNREAD MESSAGES ID's
+	unread_ids=[x['id'] for x in unread_messages['messages']]
+	return {"key": request.params['code'], "results": str(mime_msg)}
