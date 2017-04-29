@@ -17,6 +17,7 @@ flow.params['include_granted_scopes'] = 'true'   # incremental auth
 @view_config(route_name='home', renderer='templates/mytemplate.jinja2')
 def index(request):
 	return {"projectTitle": "GMAIL API USAGE EXAMPLE"}
+
 @view_config(route_name='gmail', renderer='templates/mytemplate.jinja2')
 def gmail(request):
 	
@@ -35,8 +36,5 @@ def connected_view(request):
 	message = gmail.users().messages().get(userId='me', id=messages['messages'][0]['id'], format='raw').execute()
 	msg_str = str(base64.urlsafe_b64decode(message['raw'].encode('ASCII')))
 	mime_msg = email.message_from_string(msg_str)
-	msg=messages['messages'][0]
-	tdata = gmail.users().threads().get(userId='me', id=messages['messages'][0]['id']).execute()
-	nmsgs = len(tdata['messages'])
 	data=[x['id'] for x in messages['messages']]
-	return {"key": request.params['code'], "results": str(x)}
+	return {"key": request.params['code'], "results": str(data)}
