@@ -38,9 +38,9 @@ def connected_view(request):
 	message_ids=[x['id'] for x in messages['messages']]
 	
 	#GET ONE MESSAGE.
-	message = gmail.users().messages().get(userId='me', id=message_ids[0], format='full').execute()
-	#msg_str = str(base64.urlsafe_b64decode(message[].encode('ASCII')))
-	mime_msg = email.message_from_string(str(message))
+	message = gmail.users().messages().get(userId='me', id=message_ids[0], format='raw').execute()
+	msg_str = str(base64.urlsafe_b64decode(message['raw'].encode('ASCII')))
+	mime_msg = email.message_from_string(msg_str)
 	
 	"""read_message={}
 	if mime_msg.get_content_maintype()=="multipart/alternative":
@@ -51,7 +51,11 @@ def connected_view(request):
 				read_message['html']=content.get_payload(decode=True)
 	elif mime_msg.get_content_maintype()=="text":
 		read_message['body']=mime_msg.get_payload()"""
-
+	mytext=''
+	for part in mime_msg.walk():
+		mime_msg.get_payload()
+		if part.get_content_type()=='text/html':
+			mytext=base64.urlsafe_b64decode(part.get_payload().encode('UTF-8'))
 	#GET UNREAD MESSAGES
 	unread_messages = gmail.users().messages().list(userId='me',labelIds='UNREAD').execute()
 	
