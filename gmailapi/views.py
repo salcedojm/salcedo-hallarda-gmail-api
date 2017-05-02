@@ -5,6 +5,8 @@ import httplib2, base64, email
 from apiclient.discovery import build
 from email.mime.text import MIMEText
 import json
+import re
+
 snippet=""
 msg_txt=""
 flow = client.flow_from_clientsecrets(
@@ -54,7 +56,7 @@ def connected_view(request):
 		if part.get_content_type()=="text/plain":
 			body=part.get_payload(decode=True)
 			msg=body.decode('utf-8')
-			msg = "<br>".join(msg.split("\n"))
+			msg = str("<br>".join(msg.split("\n")))
 
 	global snippet
 	global msg_txt
@@ -66,4 +68,10 @@ def connected_view(request):
 def get_message(request):
 	global snippet
 	global msg_txt
-	return {"snippet": snippet, "message": msg_txt}
+	urls=re.findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', msg_txt)
+	link = re.compile(r"((https?):((//)|(\\\\))+[\w\d:#@%/;$()~_?\+-=\\\.&]*)", re.MULTILINE|re.UNICODE)
+	value = link.sub(r'<a href="\1" target="_blank">\1</a>', msg_txt)
+	#for x in urls:
+	#	msg_txt.replace('"'+x+'"', "<a href='"+x+"'>"+x+"</a>")
+	#	print("<a href='"+x+"'>"+x+"</a>")
+	return {"snippet": snippet, "message": value}
