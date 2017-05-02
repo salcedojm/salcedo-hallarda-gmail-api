@@ -6,7 +6,7 @@ from apiclient.discovery import build
 from email.mime.text import MIMEText
 
 flow = client.flow_from_clientsecrets(
-    r'C:\Users\Innovation\Desktop\salcedo-hallarda-gmail-api\gmailapi\client_secret_671614443448-s8add1bvhklmrukfh3n7rd1vhspchl61.apps.googleusercontent.com.json',
+    r'C:\Users\Innovation\Desktop\salcedo-hallarda-gmail-api\gmailapi\client_secret.json',
     scope=r'https://mail.google.com/',
     redirect_uri='http://localhost:6543/connected')
 flow.params['access_type'] = 'offline'         # offline access
