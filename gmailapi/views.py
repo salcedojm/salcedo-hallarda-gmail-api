@@ -48,7 +48,7 @@ def connected_view(request):
 	unread_ids=[x['id'] for x in unread_messages['messages']]
 	
 	#GET ONE MESSAGE.
-	message = gmail.users().messages().get(userId='me', id=message_ids[0], format='raw').execute()
+	message = gmail.users().messages().get(userId='me', id=unread_ids[0], format='raw').execute()
 	msg_str = base64.urlsafe_b64decode(message['raw'].encode('ASCII'))
 	msg_str=msg_str.decode('utf-8')
 	mime_msg = email.message_from_string(msg_str)
