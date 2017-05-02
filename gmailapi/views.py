@@ -4,7 +4,9 @@ from pyramid.httpexceptions import HTTPFound
 import httplib2, base64, email
 from apiclient.discovery import build
 from email.mime.text import MIMEText
-
+import json
+snippet=""
+msg_txt=""
 flow = client.flow_from_clientsecrets(
     r'C:\Users\Innovation\Desktop\salcedo-hallarda-gmail-api\gmailapi\client_secret.json',
     scope=r'https://mail.google.com/',
@@ -37,6 +39,12 @@ def connected_view(request):
 	#GET ALL MESSAGE ID's
 	message_ids=[x['id'] for x in messages['messages']]
 	
+	#GET UNREAD MESSAGES
+	unread_messages = gmail.users().messages().list(userId='me', labelIds='UNREAD').execute()
+	
+	#GET UNREAD MESSAGES ID's
+	unread_ids=[x['id'] for x in unread_messages['messages']]
+	
 	#GET ONE MESSAGE.
 	message = gmail.users().messages().get(userId='me', id=message_ids[0], format='raw').execute()
 	msg_str = base64.urlsafe_b64decode(message['raw'].encode('ASCII'))
@@ -46,9 +54,16 @@ def connected_view(request):
 		if part.get_content_type()=="text/plain":
 			body=part.get_payload(decode=True)
 			msg=body.decode('utf-8')
-	#GET UNREAD MESSAGES
-	unread_messages = gmail.users().messages().list(userId='me',labelIds='UNREAD').execute()
-	
-	#GET UNREAD MESSAGES ID's
-	unread_ids=[x['id'] for x in unread_messages['messages']]
+			msg = "<br>".join(msg.split("\n"))
+
+	global snippet
+	global msg_txt
+	snippet=message['snippet']
+	msg_txt=msg
 	return {"key": request.params['code'], "results": msg , "messageSnippet": message['snippet']}
+
+@view_config(route_name='get_message', renderer='json')
+def get_message(request):
+	global snippet
+	global msg_txt
+	return {"snippet": snippet, "message": msg_txt}
