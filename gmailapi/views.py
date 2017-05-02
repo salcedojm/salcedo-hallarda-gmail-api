@@ -41,24 +41,10 @@ def connected_view(request):
 	message = gmail.users().messages().get(userId='me', id=message_ids[0], format='raw').execute()
 	msg_str = str(base64.urlsafe_b64decode(message['raw'].encode('ASCII')))
 	mime_msg = email.message_from_string(msg_str)
-	
-	"""read_message={}
-	if mime_msg.get_content_maintype()=="multipart/alternative":
-		for content in mime_msg.message.walk():
-			if content.get_content_type()=="text/plain":
-				read_message['body']=content.get_payload(decode=True)
-			elif content.get_content_type()=="text/html":
-				read_message['html']=content.get_payload(decode=True)
-	elif mime_msg.get_content_maintype()=="text":
-		read_message['body']=mime_msg.get_payload()"""
-	mytext=''
-	for part in mime_msg.walk():
-		mime_msg.get_payload()
-		if part.get_content_type()=='text/html':
-			mytext=base64.urlsafe_b64decode(part.get_payload().encode('UTF-8'))
+
 	#GET UNREAD MESSAGES
 	unread_messages = gmail.users().messages().list(userId='me',labelIds='UNREAD').execute()
 	
 	#GET UNREAD MESSAGES ID's
 	unread_ids=[x['id'] for x in unread_messages['messages']]
-	return {"key": request.params['code'], "results": str(mime_msg)}
+	return {"key": request.params['code'], "results": str(msg_str.keys()), "messageSnippet": message['snippet']}
