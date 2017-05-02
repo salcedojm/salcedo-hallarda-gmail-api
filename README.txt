@@ -4,9 +4,9 @@ gmailapi
 Getting Started
 ---------------
 
-- Change directory into your newly created project.
+- Change directory into this project.
 
-    cd gmailapi
+    cd salcedo-hallarda-gmail-api
 
 - Create a Python virtual environment.
 
@@ -24,6 +24,12 @@ Getting Started
 
     env/bin/pytest
 
+- Install the gmail api client and oauth2client
+	
+	pip install --upgrade google-api-python-client
+
+- In gmailapi/templates/views.py LINE 9
+	Copy the directory of client_secret.json file
 - Run your project.
 
     env/bin/pserve development.ini
