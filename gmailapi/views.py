@@ -12,8 +12,7 @@ msg_txt=""
 flow = client.flow_from_clientsecrets(
     r'C:\Users\Innovation\Desktop\salcedo-hallarda-gmail-api\gmailapi\client_secret.json',
     scope=r'https://mail.google.com/',
-    redirect_uri='http://localhost:6543/connected')
-flow.params['access_type'] = 'offline'         # offline access
+    redirect_uri='http://localhost:6543/connected')       # offline access
 flow.params['include_granted_scopes'] = 'true'   # incremental auth
 
 @view_config(route_name='home', renderer='templates/mytemplate.jinja2')
@@ -69,6 +68,7 @@ def get_message(request):
 	global snippet
 	global msg_txt
 	urls=re.findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', msg_txt)
+
 	link = re.compile(r"((https?):((//)|(\\\\))+[\w\d:#@%/;$()~_?\+-=\\\.&]*)", re.MULTILINE|re.UNICODE)
 	value = link.sub(r'<a href="\1" target="_blank">\1</a>', msg_txt)
 	#for x in urls:
