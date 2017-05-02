@@ -42,9 +42,13 @@ def connected_view(request):
 	msg_str = base64.urlsafe_b64decode(message['raw'].encode('ASCII'))
 	msg_str=msg_str.decode('utf-8')
 	mime_msg = email.message_from_string(msg_str)
+	for part in mime_msg.walk():
+		if part.get_content_type()=="text/plain":
+			body=part.get_payload(decode=True)
+			msg=body.decode('utf-8')
 	#GET UNREAD MESSAGES
 	unread_messages = gmail.users().messages().list(userId='me',labelIds='UNREAD').execute()
 	
 	#GET UNREAD MESSAGES ID's
 	unread_ids=[x['id'] for x in unread_messages['messages']]
-	return {"key": request.params['code'], "results": mime_msg , "messageSnippet": message['snippet']}
+	return {"key": request.params['code'], "results": msg , "messageSnippet": message['snippet']}
