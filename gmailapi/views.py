@@ -47,4 +47,4 @@ def connected_view(request):
 	
 	#GET UNREAD MESSAGES ID's
 	unread_ids=[x['id'] for x in unread_messages['messages']]
-	return {"key": request.params['code'], "results": str(msg_str.keys()), "messageSnippet": message['snippet']}
+	return {"key": request.params['code'], "results": str(mime_msg.keys()), "messageSnippet": message['snippet']}
