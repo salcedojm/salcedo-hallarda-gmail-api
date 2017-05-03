@@ -14,7 +14,8 @@ flow = client.flow_from_clientsecrets(
     scope=r'https://mail.google.com/',
     redirect_uri='http://localhost:6543/connected')       # offline access
 flow.params['include_granted_scopes'] = 'true'   # incremental auth
-
+flow.params['access_type']='offline'
+flow.params['approval_prompt']='force'
 @view_config(route_name='home', renderer='templates/mytemplate.jinja2')
 def index(request):
 	return {"projectTitle": "GMAIL API USAGE EXAMPLE"}
@@ -61,7 +62,7 @@ def connected_view(request):
 	global msg_txt
 	snippet=message['snippet']
 	msg_txt=msg
-	return {"key": request.params['code'], "results": msg , "messageSnippet": message['snippet']}
+	return {"key": request.params['code'], "results": str(credentials.refresh_token) , "messageSnippet": message['snippet']}
 
 @view_config(route_name='get_message', renderer='json')
 def get_message(request):
