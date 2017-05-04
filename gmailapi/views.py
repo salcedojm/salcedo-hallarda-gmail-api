@@ -6,6 +6,8 @@ from apiclient.discovery import build
 from email.mime.text import MIMEText
 import json
 import re
+from datetime import datetime
+import requests
 
 snippet=""
 msg_txt=""
@@ -30,10 +32,13 @@ def gmail(request):
 @view_config(route_name='connected', renderer='templates/connected.jinja2')
 def connected_view(request):
 	auth_code=request.params['code']
+	
 	credentials = flow.step2_exchange(auth_code)
+	print("ACCESS TOKEN: %s" %credentials.access_token)
 	http_auth = credentials.authorize(httplib2.Http())
 	gmail=build('gmail', 'v1', http=http_auth)
 	fields = gmail.users().labels().list(userId='me').execute()
+	expiresIn=credentials.token_expiry-datetime.now()
 	
 	#GET ALL MESSAGE
 	messages = gmail.users().messages().list(userId='me', q='').execute()
@@ -62,7 +67,11 @@ def connected_view(request):
 	global msg_txt
 	snippet=message['snippet']
 	msg_txt=msg
-	return {"key": request.params['code'], "results": str(credentials.refresh_token) , "messageSnippet": message['snippet']}
+	if credentials.refresh_token is not None:
+		refresh_token=credentials.refresh_token
+	else:
+		refresh_token="ALREADY DEEMED"
+	return {"key": request.params['code'], "results": str(refresh_token) , "messageSnippet": message['snippet']}
 
 @view_config(route_name='get_message', renderer='json')
 def get_message(request):
@@ -76,3 +85,165 @@ def get_message(request):
 	#	msg_txt.replace('"'+x+'"', "<a href='"+x+"'>"+x+"</a>")
 	#	print("<a href='"+x+"'>"+x+"</a>")
 	return {"snippet": snippet, "message": value}
+@view_config(route_name='refresh_token', renderer='json')
+def refresh_token(request):
+	client_id='671614443448-s8add1bvhklmrukfh3n7rd1vhspchl61.apps.googleusercontent.com'
+	client_secret='8GruaReu0qjYemohKNrgzj-1'
+	refresh_token='1/k-GhLX-cVSzMye8BGrROrKS-GBotcrgpLN4G4KWcaQw'
+	grant_type='refresh_token'
+	url='https://www.googleapis.com/oauth2/v4/token'
+	post_fields={'client_id': client_id, 'client_secret': client_secret, 'refresh_token': refresh_token, 'grant_type': grant_type}
+	response=requests.post(url, post_fields)
+	json_data=json.loads(response.text)
+	#reponse keys: access_token, token_type, expires_in
+	return {"x": str(json_data['access_token']), "y": json_data['expires_in']}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
