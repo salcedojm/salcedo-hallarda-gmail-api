@@ -32,8 +32,9 @@ def gmail(request):
 @view_config(route_name='connected', renderer='templates/connected.jinja2')
 def connected_view(request):
 	auth_code=request.params['code']
-	
+
 	credentials = flow.step2_exchange(auth_code)
+	#credentials.access_token='ya29.GltABPzCMrLVI-1lljCsmp-ZRcMV1LW87VWtDJNWECamupqkbZOlYhyQxMrqkvhm_m5-xzQRLeYRocTJd9IgRFD6lpX6xzkr9m2tnJSFZqjNnTDeoCrHMVbigWXD'
 	print("ACCESS TOKEN: %s" %credentials.access_token)
 	http_auth = credentials.authorize(httplib2.Http())
 	gmail=build('gmail', 'v1', http=http_auth)
@@ -71,7 +72,7 @@ def connected_view(request):
 		refresh_token=credentials.refresh_token
 	else:
 		refresh_token="ALREADY DEEMED"
-	return {"key": request.params['code'], "results": str(refresh_token) , "messageSnippet": message['snippet']}
+	return {"key": request.params['code'], "results": str(credentials.access_token) , "messageSnippet": message['snippet']}
 
 @view_config(route_name='get_message', renderer='json')
 def get_message(request):
