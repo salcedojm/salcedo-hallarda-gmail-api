@@ -1,13 +1,11 @@
 from pyramid.view import view_config
 from oauth2client import client
 from pyramid.httpexceptions import HTTPFound
-import httplib2, base64, email
+from .models import RefreshToken
 from apiclient.discovery import build
 from email.mime.text import MIMEText
-import json
-import re
 from datetime import datetime
-import requests
+import json, re, requests, httplib2, base64, email,time
 
 snippet=""
 msg_txt=""
@@ -85,166 +83,22 @@ def get_message(request):
 	#	msg_txt.replace('"'+x+'"', "<a href='"+x+"'>"+x+"</a>")
 	#	print("<a href='"+x+"'>"+x+"</a>")
 	return {"snippet": snippet, "message": value}
+
 @view_config(route_name='refresh_token', renderer='json')
 def refresh_token(request):
-	
+	newAccessToken=get_new_access_token('1/k-GhLX-cVSzMye8BGrROrKS-GBotcrgpLN4G4KWcaQw')
+	return json.dumps(newAccessToken)
+
+def get_new_access_token(refreshToken):
 	client_id='671614443448-s8add1bvhklmrukfh3n7rd1vhspchl61.apps.googleusercontent.com'
 	client_secret='8GruaReu0qjYemohKNrgzj-1'
-	refresh_token='1/k-GhLX-cVSzMye8BGrROrKS-GBotcrgpLN4G4KWcaQw'
 	grant_type='refresh_token'
 	url='https://www.googleapis.com/oauth2/v4/token'
-	post_fields={'client_id': client_id, 'client_secret': client_secret, 'refresh_token': refresh_token, 'grant_type': grant_type}
+	post_fields={'client_id': client_id, 'client_secret': client_secret, 'refresh_token': refreshToken, 'grant_type': grant_type}
 	response=requests.post(url, post_fields)
 	json_data=json.loads(response.text)
+	expire_time=int(json_data['expires_in'])+time.time()
+	r=RefreshToken(refresh_token=refreshToken, expiration=expire_time, access_token=json_data['access_token'])
+	r.save()
 	#reponse keys: access_token, token_type, expires_in
-	return {"x": str(json_data['access_token']), "y": json_data['expires_in']}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	return json_data
