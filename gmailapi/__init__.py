@@ -12,5 +12,6 @@ def main(global_config, **settings):
     config.add_route('connected', '/connected')
     config.add_route('get_message', '/get_message')
     config.add_route('refresh_token', '/refresh_token')
+    config.add_route('messages', '/messages')
     config.scan()
     return config.make_wsgi_app()

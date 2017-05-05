@@ -7,8 +7,7 @@ from email.mime.text import MIMEText
 from datetime import datetime
 import json, re, requests, httplib2, base64, email,time
 from pprint import pprint
-snippet=""
-msg_txt=""
+
 flow = client.flow_from_clientsecrets(
     r'C:\Users\Innovation\Desktop\salcedo-hallarda-gmail-api\gmailapi\client_secret.json',
     scope=[r'https://mail.google.com/',
@@ -16,6 +15,7 @@ flow = client.flow_from_clientsecrets(
     r'https://www.googleapis.com/auth/gmail.compose',
     r'https://www.googleapis.com/auth/gmail.readonly'],
     redirect_uri='http://localhost:6543/connected')       # offline access
+
 flow.params['include_granted_scopes'] = 'true'   # incremental auth
 flow.params['access_type']='offline'
 flow.params['approval_prompt']='force'
@@ -25,19 +25,33 @@ def index(request):
 
 @view_config(route_name='gmail', renderer='templates/mytemplate.jinja2')
 def gmail(request):
-	
 	auth_uri = flow.step1_get_authorize_url()
 	print(auth_uri)
 	return HTTPFound(location=str(auth_uri))
 
 @view_config(route_name='connected', renderer='templates/connected.jinja2')
-def connected_view(request):
+def connected(request):
 	auth_code=request.params['code']
+	global credentials
 	credentials = flow.step2_exchange(auth_code)
 	print("ACCESS TOKEN: %s" %credentials.access_token)
+	
+	if credentials.refresh_token is not None:
+		refresh_token=credentials.refresh_token
+	else:
+		refresh_token="ALREADY DEEMED"
+	return HTTPFound(location='messages')
+
+@view_config(route_name='messages', renderer='templates/messages.jinja2')
+def messages(request):
+	return {"title": "MESSAGES"}
+
+@view_config(route_name='get_message', renderer='json')
+def get_message(request):
+	global snippet
+	global msg_txt
 	http_auth = credentials.authorize(httplib2.Http())
 	gmail=build('gmail', 'v1', http=http_auth)
-	print(vars(gmail))
 	fields = gmail.users().labels().list(userId='me').execute()
 	expiresIn=credentials.token_expiry-datetime.now()
 	emailAddress=gmail.users().getProfile(userId='me').execute()['emailAddress']
@@ -68,16 +82,6 @@ def connected_view(request):
 	global msg_txt
 	snippet=message['snippet']
 	msg_txt=msg
-	if credentials.refresh_token is not None:
-		refresh_token=credentials.refresh_token
-	else:
-		refresh_token="ALREADY DEEMED"
-	return {"key": request.params['code'], "results": str(credentials.access_token) , "messageSnippet": message['snippet']}
-
-@view_config(route_name='get_message', renderer='json')
-def get_message(request):
-	global snippet
-	global msg_txt
 	urls=re.findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', msg_txt)
 
 	link = re.compile(r"((https?):((//)|(\\\\))+[\w\d:#@%/;$()~_?\+-=\\\.&]*)", re.MULTILINE|re.UNICODE)
