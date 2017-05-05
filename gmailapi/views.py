@@ -6,12 +6,15 @@ from apiclient.discovery import build
 from email.mime.text import MIMEText
 from datetime import datetime
 import json, re, requests, httplib2, base64, email,time
-
+from pprint import pprint
 snippet=""
 msg_txt=""
 flow = client.flow_from_clientsecrets(
     r'C:\Users\Innovation\Desktop\salcedo-hallarda-gmail-api\gmailapi\client_secret.json',
-    scope=r'https://mail.google.com/',
+    scope=[r'https://mail.google.com/',
+    r'https://www.googleapis.com/auth/gmail.modify',
+    r'https://www.googleapis.com/auth/gmail.compose',
+    r'https://www.googleapis.com/auth/gmail.readonly'],
     redirect_uri='http://localhost:6543/connected')       # offline access
 flow.params['include_granted_scopes'] = 'true'   # incremental auth
 flow.params['access_type']='offline'
@@ -31,13 +34,13 @@ def gmail(request):
 def connected_view(request):
 	auth_code=request.params['code']
 	credentials = flow.step2_exchange(auth_code)
-	#credentials.access_token='ya29.GltABPzCMrLVI-1lljCsmp-ZRcMV1LW87VWtDJNWECamupqkbZOlYhyQxMrqkvhm_m5-xzQRLeYRocTJd9IgRFD6lpX6xzkr9m2tnJSFZqjNnTDeoCrHMVbigWXD'
 	print("ACCESS TOKEN: %s" %credentials.access_token)
 	http_auth = credentials.authorize(httplib2.Http())
 	gmail=build('gmail', 'v1', http=http_auth)
+	print(vars(gmail))
 	fields = gmail.users().labels().list(userId='me').execute()
 	expiresIn=credentials.token_expiry-datetime.now()
-	
+	emailAddress=gmail.users().getProfile(userId='me').execute()['emailAddress']
 	#GET ALL MESSAGE
 	messages = gmail.users().messages().list(userId='me', q='').execute()
 	
