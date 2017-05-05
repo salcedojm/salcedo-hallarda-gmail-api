@@ -32,7 +32,6 @@ def gmail(request):
 @view_config(route_name='connected', renderer='templates/connected.jinja2')
 def connected_view(request):
 	auth_code=request.params['code']
-
 	credentials = flow.step2_exchange(auth_code)
 	#credentials.access_token='ya29.GltABPzCMrLVI-1lljCsmp-ZRcMV1LW87VWtDJNWECamupqkbZOlYhyQxMrqkvhm_m5-xzQRLeYRocTJd9IgRFD6lpX6xzkr9m2tnJSFZqjNnTDeoCrHMVbigWXD'
 	print("ACCESS TOKEN: %s" %credentials.access_token)
@@ -88,6 +87,7 @@ def get_message(request):
 	return {"snippet": snippet, "message": value}
 @view_config(route_name='refresh_token', renderer='json')
 def refresh_token(request):
+	
 	client_id='671614443448-s8add1bvhklmrukfh3n7rd1vhspchl61.apps.googleusercontent.com'
 	client_secret='8GruaReu0qjYemohKNrgzj-1'
 	refresh_token='1/k-GhLX-cVSzMye8BGrROrKS-GBotcrgpLN4G4KWcaQw'
