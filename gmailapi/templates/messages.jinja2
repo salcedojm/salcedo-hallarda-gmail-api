@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>GMAIL API SAMPLE</title>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+		<script>
+			$(document).ready(function(){
+				$.get('get_message', function(data, status){
+					$("#msgSnippet").html(data['snippet']);
+					$("#message").html(data['message']);
+				})
+			})
+
+		</script>
+	</head>
+	<body>
+		<font face="calibri">
+		<h1>ACCESS TOKEN: {{messages}}</h1>
+		<h4>MESSAGE SNIPPET: <span id="msgSnippet"></span><br>Message content:<br><span id="message"></span></h4>
+		</font>
+	</body>
+</html>
