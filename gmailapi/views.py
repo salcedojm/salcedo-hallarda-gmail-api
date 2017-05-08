@@ -57,6 +57,8 @@ def get_message(request):
 	gmail=build('gmail', 'v1', http=http_auth)
 	fields = gmail.users().labels().list(userId='me').execute()
 	emailAddress=gmail.users().getProfile(userId='me').execute()['emailAddress']
+	session=request.session
+	session['emailAddress']=emailAddress
 	#storage = Storage('credentials/%s.dat' % emailAddress)
 	#storage.put(credentials)
 	existing_user=bool(Users.objects(email=emailAddress))
@@ -105,7 +107,7 @@ def get_message(request):
 	#for x in urls:
 	#	msg_txt.replace('"'+x+'"', "<a href='"+x+"'>"+x+"</a>")
 	#	print("<a href='"+x+"'>"+x+"</a>")
-	return {"snippet": snippet, "message": value}
+	return {"snippet": session['emailAddress'], "message": value}
 
 @view_config(route_name='refresh_token', renderer='json')
 def refresh_token(request):
