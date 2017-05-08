@@ -8,7 +8,6 @@ from datetime import datetime
 from pprint import pprint
 from oauth2client.file import Storage
 from threading import Timer
-from apiclient import errors
 import json, re, requests, httplib2, base64, email,time
 
 flow = client.flow_from_clientsecrets(
@@ -51,7 +50,9 @@ def messages(request):
 
 @view_config(route_name='get_message', renderer='json')
 def get_message(request):
-	global snippet, msg_txt, credentials, gmail
+	global snippet
+	global msg_txt
+	global credentials
 	http_auth = credentials.authorize(httplib2.Http())
 	gmail=build('gmail', 'v1', http=http_auth)
 	fields = gmail.users().labels().list(userId='me').execute()
@@ -59,14 +60,15 @@ def get_message(request):
 	#storage = Storage('credentials/%s.dat' % emailAddress)
 	#storage.put(credentials)
 	existing_user=bool(Users.objects(email=emailAddress))
-	credential_storage=Storage('credentials/%s.dat' % emailAddress)
 	if not existing_user:
 		users=Users(email=emailAddress,
 			refreshToken=credentials.refresh_token,
 			tokenExpiration=int(credentials.token_response['expires_in'])+time.time())
 		users.save()
+		credential_storage=Storage('credentials/%s.dat' % emailAddress)
 		credential_storage.put(credentials)
 	else:
+		credential_storage=Storage('credentials/%s.dat' % emailAddress)
 		credentials=credential_storage.get()
 
 	check_token_expiry(str(emailAddress),str(credentials.refresh_token))
@@ -110,19 +112,6 @@ def refresh_token(request):
 	newAccessToken=get_new_access_token('1/k-GhLX-cVSzMye8BGrROrKS-GBotcrgpLN4G4KWcaQw')
 	return json.dumps(newAccessToken)
 
-@view_config(route_name='send_message_view', renderer='templates/send_message.jinja2')
-def send_message_view(request):
-	return{"message": str(request.POST.get('message'))}
-
-@view_config(route_name='send_message', renderer='json')
-def send_message(request):
-	global gmail
-	try:
-		message=create_message('me', 'john.salcedo@tenelleven.com', 'test', 'HELLO TEST')
-		sendThis=(gmail.users().messages().send(userId='me', body=message).execute())
-		return{"KEY": "SENT"}
-	except errors.HttpError as error:
-		return{"SOME SHIT OCCURED %s " % error}
 def get_new_access_token(refreshToken):
 	client_id='671614443448-s8add1bvhklmrukfh3n7rd1vhspchl61.apps.googleusercontent.com'
 	client_secret='8GruaReu0qjYemohKNrgzj-1'
@@ -138,12 +127,5 @@ def get_new_access_token(refreshToken):
 	return json_data
 
 def check_token_expiry(userEmail, refresh_token):
-	timeLeft=time.time()-int(Users.objects(email=userEmail)[0]['tokenExpiration'])
+	timeLeft=int(Users.objects(email=userEmail)[0]['tokenExpiration'])-time.time()
 	print("TIMELEFT IS %s" % timeLeft)
-
-def create_message(sender, to, subject, message_text):
-	message=MIMEText(message_text)
-	message['to']=to
-	message['from']=sender
-	message['subject']=subject
-	return {"raw": base64.urlsafe_b64encode(b'TEST THIS')}
