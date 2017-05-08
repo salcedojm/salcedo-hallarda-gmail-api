@@ -1,12 +1,13 @@
 from pyramid.view import view_config
 from oauth2client import client
 from pyramid.httpexceptions import HTTPFound
-from .models import RefreshToken
+from .models import *
 from apiclient.discovery import build
 from email.mime.text import MIMEText
 from datetime import datetime
-import json, re, requests, httplib2, base64, email,time
 from pprint import pprint
+from oauth2client.file import Storage
+import json, re, requests, httplib2, base64, email,time
 
 flow = client.flow_from_clientsecrets(
     r'C:\Users\Innovation\Desktop\salcedo-hallarda-gmail-api\gmailapi\client_secret.json',
@@ -53,9 +54,15 @@ def get_message(request):
 	http_auth = credentials.authorize(httplib2.Http())
 	gmail=build('gmail', 'v1', http=http_auth)
 	fields = gmail.users().labels().list(userId='me').execute()
-	expiresIn=credentials.token_expiry-datetime.now()
 	emailAddress=gmail.users().getProfile(userId='me').execute()['emailAddress']
+	#storage = Storage('credentials/%s.dat' % emailAddress)
+	#storage.put(credentials)
+	users=Users(email=emailAddress,
+		refreshToken=credentials.refresh_token,
+		tokenExpiration=int(credentials.token_response['expires_in'])+time.time())
+	users.save()
 	#GET ALL MESSAGE
+	
 	messages = gmail.users().messages().list(userId='me', q='').execute()
 	
 	#GET ALL MESSAGE ID's
