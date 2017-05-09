@@ -24,6 +24,7 @@ flow.params['approval_prompt']='force'
 
 @view_config(route_name='send_message_view', renderer='templates/send_message.jinja2')
 @view_config(route_name='home', renderer='templates/mytemplate.jinja2')
+@view_config(route_name='actions', renderer='templates/actions.jinja2')
 def index(request):
 	return {"projectTitle": "GMAIL API USAGE EXAMPLE"}
 
@@ -56,7 +57,8 @@ def connected(request):
 		credential_storage.put(credentials)
 	else:
 		credential_storage=Storage('credentials/%s.dat' % emailAddress)
-		credentials=credential_storage.get()
+		credential_storage.put(credentials)
+		Users.objects(email=emailAddress).update(set__tokenExpiration=int(credentials.token_response['expires_in'])+time.time())
 
 	print("ACCESS TOKEN: %s" %credentials.access_token)
 	
@@ -64,7 +66,7 @@ def connected(request):
 		refresh_token=credentials.refresh_token
 	else:
 		refresh_token="ALREADY DEEMED"
-	return HTTPFound(location='messages')
+	return HTTPFound(location='actions')
 
 @view_config(route_name='messages', renderer='templates/messages.jinja2')
 def messages(request):
@@ -72,9 +74,13 @@ def messages(request):
 
 @view_config(route_name='get_message', renderer='json')
 def get_message(request):
-	global gmail
 	session=request.session
 	emailAddress=session['emailAddress']
+	credential_storage=Storage('credentials/%s.dat' % emailAddress)
+	credential=credential_storage.get()
+	http_auth=credentials.authorize(httplib2.Http())
+	gmail=build('gmail', 'v1', http=http_auth)
+	
 	check_token_expiry(str(emailAddress),str(credentials.refresh_token))
 	fields = gmail.users().labels().list(userId='me').execute()
 	#GET ALL MESSAGE
