@@ -21,6 +21,7 @@ flow = client.flow_from_clientsecrets(
 flow.params['include_granted_scopes'] = 'true'   # incremental auth
 flow.params['access_type']='offline'
 flow.params['approval_prompt']='force'
+
 @view_config(route_name='home', renderer='templates/mytemplate.jinja2')
 def index(request):
 	return {"projectTitle": "GMAIL API USAGE EXAMPLE"}
@@ -50,12 +51,10 @@ def messages(request):
 
 @view_config(route_name='get_message', renderer='json')
 def get_message(request):
-	global snippet
-	global msg_txt
 	global credentials
+	global gmail
 	http_auth = credentials.authorize(httplib2.Http())
 	gmail=build('gmail', 'v1', http=http_auth)
-	fields = gmail.users().labels().list(userId='me').execute()
 	emailAddress=gmail.users().getProfile(userId='me').execute()['emailAddress']
 	session=request.session
 	session['emailAddress']=emailAddress
@@ -74,6 +73,7 @@ def get_message(request):
 		credentials=credential_storage.get()
 
 	check_token_expiry(str(emailAddress),str(credentials.refresh_token))
+	fields = gmail.users().labels().list(userId='me').execute()
 	#GET ALL MESSAGE
 	
 	messages = gmail.users().messages().list(userId='me', q='').execute()
@@ -107,12 +107,7 @@ def get_message(request):
 	#for x in urls:
 	#	msg_txt.replace('"'+x+'"', "<a href='"+x+"'>"+x+"</a>")
 	#	print("<a href='"+x+"'>"+x+"</a>")
-	return {"snippet": session['emailAddress'], "message": value}
-
-@view_config(route_name='refresh_token', renderer='json')
-def refresh_token(request):
-	newAccessToken=get_new_access_token('1/k-GhLX-cVSzMye8BGrROrKS-GBotcrgpLN4G4KWcaQw')
-	return json.dumps(newAccessToken)
+	return {"snippet": snippet, "message": value}
 
 def get_new_access_token(refreshToken):
 	client_id='671614443448-s8add1bvhklmrukfh3n7rd1vhspchl61.apps.googleusercontent.com'
@@ -122,10 +117,10 @@ def get_new_access_token(refreshToken):
 	post_fields={'client_id': client_id, 'client_secret': client_secret, 'refresh_token': refreshToken, 'grant_type': grant_type}
 	response=requests.post(url, post_fields)
 	json_data=json.loads(response.text)
-	expire_time=int(json_data['expires_in'])+time.time()
-	r=RefreshToken(refresh_token=refreshToken, expiration=expire_time, access_token=json_data['access_token'])
-	r.save()
-	#reponse keys: access_token, token_type, expires_in
+	# expire_time=int(json_data['expires_in'])+time.time()
+	# r=RefreshToken(refresh_token=refreshToken, expiration=expire_time, access_token=json_data['access_token'])
+	# r.save()
+	# #reponse keys: access_token, token_type, expires_in
 	return json_data
 
 def check_token_expiry(userEmail, refresh_token):
