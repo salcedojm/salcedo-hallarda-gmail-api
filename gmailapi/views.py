@@ -22,6 +22,7 @@ flow.params['include_granted_scopes'] = 'true'   # incremental auth
 flow.params['access_type']='offline'
 flow.params['approval_prompt']='force'
 
+@view_config(route_name='send_message_view', renderer='templates/send_message.jinja2')
 @view_config(route_name='home', renderer='templates/mytemplate.jinja2')
 def index(request):
 	return {"projectTitle": "GMAIL API USAGE EXAMPLE"}
