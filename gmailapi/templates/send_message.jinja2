@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>GMAIL API SAMPLE</title>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+		<script>
+			$(document).ready(function(){
+				$("#sendBtn").click(function(){
+					$.post('send_message',
+						function(data, status)
+						{
+							alert(data.KEY)
+						})
+				})
+			});
+		</script>
+	</head>
+	<body>
+		<label>TO:</label><br>
+		<input type="text" size=54><br>
+		<label>MESSAGE: </label><br>
+		<textarea rows=10 cols=50>
+		</textarea><br>
+		<button id="sendBtn">SEND</button>
+	</body>
+</html>

@@ -36,23 +36,8 @@ def gmail(request):
 def connected(request):
 	auth_code=request.params['code']
 	global credentials
-	credentials = flow.step2_exchange(auth_code)
-	print("ACCESS TOKEN: %s" %credentials.access_token)
-	
-	if credentials.refresh_token is not None:
-		refresh_token=credentials.refresh_token
-	else:
-		refresh_token="ALREADY DEEMED"
-	return HTTPFound(location='messages')
-
-@view_config(route_name='messages', renderer='templates/messages.jinja2')
-def messages(request):
-	return {"title": "MESSAGES"}
-
-@view_config(route_name='get_message', renderer='json')
-def get_message(request):
-	global credentials
 	global gmail
+	credentials = flow.step2_exchange(auth_code)
 	http_auth = credentials.authorize(httplib2.Http())
 	gmail=build('gmail', 'v1', http=http_auth)
 	emailAddress=gmail.users().getProfile(userId='me').execute()['emailAddress']
@@ -72,6 +57,23 @@ def get_message(request):
 		credential_storage=Storage('credentials/%s.dat' % emailAddress)
 		credentials=credential_storage.get()
 
+	print("ACCESS TOKEN: %s" %credentials.access_token)
+	
+	if credentials.refresh_token is not None:
+		refresh_token=credentials.refresh_token
+	else:
+		refresh_token="ALREADY DEEMED"
+	return HTTPFound(location='messages')
+
+@view_config(route_name='messages', renderer='templates/messages.jinja2')
+def messages(request):
+	return {"title": "MESSAGES"}
+
+@view_config(route_name='get_message', renderer='json')
+def get_message(request):
+	global gmail
+	session=request.session
+	emailAddress=session['emailAddress']
 	check_token_expiry(str(emailAddress),str(credentials.refresh_token))
 	fields = gmail.users().labels().list(userId='me').execute()
 	#GET ALL MESSAGE
