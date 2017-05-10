@@ -8,6 +8,9 @@ from datetime import datetime
 from pprint import pprint
 from oauth2client.file import Storage
 from threading import Timer
+from email import encoders
+from apiclient import errors
+from email.mime.multipart import MIMEMultipart
 import json, re, requests, httplib2, base64, email,time
 
 flow = client.flow_from_clientsecrets(
@@ -125,15 +128,37 @@ def is_token_expired(userEmail):
 		return True
 	else:
 		return False
-	print("TIMELEFT IS %s" % timeLeft)
+
+def create_message(sender, to, subject, message_text_html, message_text_plain):
+    message = MIMEMultipart('alternative') # needed for both plain & HTML (the MIME type is multipart/alternative)
+    message['Subject'] = subject
+    message['From'] = sender
+    message['To'] = to
+
+    #Create the body of the message (a plain-text and an HTML version)
+    message.attach(MIMEText(message_text_plain, 'plain'))
+    message.attach(MIMEText(message_text_html, 'html'))
+
+    raw_message_no_attachment = base64.urlsafe_b64encode(message.as_bytes())
+    raw_message_no_attachment = raw_message_no_attachment.decode()
+    body  = {'raw': raw_message_no_attachment}
+    return body
 
 @view_config(route_name='send_message', renderer='json')
 def send_message(request):
 	gmail=build_gmail_service(request)
-	return{"KEY": emailAddress}
-
-def create_message():
-	pass
+	sender=request.session['emailAddress']
+	subject=request.POST.get('subject')
+	message_text_html=str("<br>".join(request.POST.get('message').split("\n")))
+	message_text_plain=request.POST.get('message')
+	to=request.POST.get('to')
+	message=create_message(sender, to, subject, message_text_html, message_text_plain)
+	try:
+		message_sent = (gmail.users().messages().send(userId='me', body=message).execute())
+		message_id = message_sent['id']
+		return{"response": "SENT"}
+	except errors.HttpError as error:
+		return{"response":str('An error occurred: {error}')}
 
 def build_gmail_service(request):
 	emailAddress=request.session['emailAddress']
