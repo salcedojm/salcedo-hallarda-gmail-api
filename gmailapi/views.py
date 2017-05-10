@@ -24,6 +24,7 @@ flow.params['approval_prompt']='force'
 
 @view_config(route_name='send_message_view', renderer='templates/send_message.jinja2')
 @view_config(route_name='home', renderer='templates/mytemplate.jinja2')
+
 @view_config(route_name='actions', renderer='templates/actions.jinja2')
 def index(request):
 	return {"projectTitle": "GMAIL API USAGE EXAMPLE"}
@@ -37,16 +38,12 @@ def gmail(request):
 @view_config(route_name='connected', renderer='templates/connected.jinja2')
 def connected(request):
 	auth_code=request.params['code']
-	global credentials
-	global gmail
 	credentials = flow.step2_exchange(auth_code)
 	http_auth = credentials.authorize(httplib2.Http())
 	gmail=build('gmail', 'v1', http=http_auth)
 	emailAddress=gmail.users().getProfile(userId='me').execute()['emailAddress']
 	session=request.session
 	session['emailAddress']=emailAddress
-	#storage = Storage('credentials/%s.dat' % emailAddress)
-	#storage.put(credentials)
 	existing_user=bool(Users.objects(email=emailAddress))
 	if not existing_user:
 		users=Users(email=emailAddress,
@@ -58,14 +55,11 @@ def connected(request):
 	else:
 		credential_storage=Storage('credentials/%s.dat' % emailAddress)
 		credential_storage.put(credentials)
-		Users.objects(email=emailAddress).update(set__tokenExpiration=int(credentials.token_response['expires_in'])+time.time())
+		Users.objects(email=emailAddress).update(
+			set__tokenExpiration=int(credentials.token_response['expires_in'])+time.time())
 
 	print("ACCESS TOKEN: %s" %credentials.access_token)
-	
-	if credentials.refresh_token is not None:
-		refresh_token=credentials.refresh_token
-	else:
-		refresh_token="ALREADY DEEMED"
+
 	return HTTPFound(location='actions')
 
 @view_config(route_name='messages', renderer='templates/messages.jinja2')
@@ -74,14 +68,8 @@ def messages(request):
 
 @view_config(route_name='get_message', renderer='json')
 def get_message(request):
-	session=request.session
-	emailAddress=session['emailAddress']
-	credential_storage=Storage('credentials/%s.dat' % emailAddress)
-	credential=credential_storage.get()
-	http_auth=credentials.authorize(httplib2.Http())
-	gmail=build('gmail', 'v1', http=http_auth)
-	
-	check_token_expiry(str(emailAddress),str(credentials.refresh_token))
+	gmail=build_gmail_service(request)
+
 	fields = gmail.users().labels().list(userId='me').execute()
 	#GET ALL MESSAGE
 	
@@ -125,13 +113,41 @@ def get_new_access_token(refreshToken):
 	url='https://www.googleapis.com/oauth2/v4/token'
 	post_fields={'client_id': client_id, 'client_secret': client_secret, 'refresh_token': refreshToken, 'grant_type': grant_type}
 	response=requests.post(url, post_fields)
-	json_data=json.loads(response.text)
-	# expire_time=int(json_data['expires_in'])+time.time()
-	# r=RefreshToken(refresh_token=refreshToken, expiration=expire_time, access_token=json_data['access_token'])
-	# r.save()
+	token_data=json.loads(response.text)
 	# #reponse keys: access_token, token_type, expires_in
-	return json_data
+	return token_data
 
-def check_token_expiry(userEmail, refresh_token):
+# RETURNS TRUE IF ACCESS TOKEN HAS EXPIRED
+# PARAM userEmail = 'email of the user'
+def is_token_expired(userEmail):
 	timeLeft=int(Users.objects(email=userEmail)[0]['tokenExpiration'])-time.time()
+	if timeLeft<300:
+		return True
+	else:
+		return False
 	print("TIMELEFT IS %s" % timeLeft)
+
+@view_config(route_name='send_message', renderer='json')
+def send_message(request):
+	gmail=build_gmail_service(request)
+	return{"KEY": emailAddress}
+
+def create_message():
+	pass
+
+def build_gmail_service(request):
+	emailAddress=request.session['emailAddress']
+	credential_storage=Storage('credentials/%s.dat' % emailAddress)
+	credentials=credential_storage.get()
+	#check if token has expired. if true then retrieve new access token
+	if is_token_expired(str(emailAddress)):
+		token_data=get_new_access_token(credentials.refresh_token)
+		credentials.access_token=token_data['access_token']
+		credentials.token_response['access_token']=token_data['access_token']
+		credentials.token_response['expires_in']=token_data['expires_in']
+		Users.objects(email=emailAddress).update(
+			set__tokenExpiration=int(credentials.token_response['expires_in'])+time.time())
+		credential_storage.put(credentials)
+	http_auth=credentials.authorize(httplib2.Http())
+	gmail=build('gmail', 'v1', http=http_auth)
+	return gmail
