@@ -40,7 +40,8 @@ def gmail(request):
 
 @view_config(route_name='connected', renderer='templates/connected.jinja2')
 def connected(request):
-	auth_code=request.params['code']
+	if 'error' in request.params:
+		return HTTPFound(location='/')
 	credentials = flow.step2_exchange(auth_code)
 	http_auth = credentials.authorize(httplib2.Http())
 	gmail=build('gmail', 'v1', http=http_auth)
@@ -60,9 +61,6 @@ def connected(request):
 		credential_storage.put(credentials)
 		Users.objects(email=emailAddress).update(
 			set__tokenExpiration=int(credentials.token_response['expires_in'])+time.time())
-
-	print("ACCESS TOKEN: %s" %credentials.access_token)
-
 	return HTTPFound(location='actions')
 
 @view_config(route_name='messages', renderer='templates/messages.jinja2')
