@@ -30,7 +30,7 @@ Getting Started
 	
 	pip install --upgrade google-api-python-client
 
-- In gmailapi/templates/views.py LINE 14
+- In gmailapi/templates/views.py LINE 17
 	Copy the directory of your client_secret.json file
 
 - Run your project.

@@ -15,15 +15,11 @@ import json, re, requests, httplib2, base64, email,time
 
 flow = client.flow_from_clientsecrets(
     r'C:\Users\Innovation\Desktop\salcedo-hallarda-gmail-api\gmailapi\client_secret.json',
-    scope=[r'https://mail.google.com/',
-    r'https://www.googleapis.com/auth/gmail.modify',
-    r'https://www.googleapis.com/auth/gmail.compose',
-    r'https://www.googleapis.com/auth/gmail.readonly'],
+    scope=[r'https://mail.google.com/'],
     redirect_uri='http://localhost:6543/connected')       # offline access
 
 flow.params['include_granted_scopes'] = 'true'   # incremental auth
 flow.params['access_type']='offline'
-flow.params['approval_prompt']='force'
 
 @view_config(route_name='send_message_view', renderer='templates/send_message.jinja2')
 @view_config(route_name='home', renderer='templates/mytemplate.jinja2')
@@ -41,7 +37,8 @@ def gmail(request):
 @view_config(route_name='connected', renderer='templates/connected.jinja2')
 def connected(request):
 	if 'error' in request.params:
-		return HTTPFound(location='/')
+		return HTTPFound(location='gmail')
+	auth_code=request.params['code']
 	credentials = flow.step2_exchange(auth_code)
 	http_auth = credentials.authorize(httplib2.Http())
 	gmail=build('gmail', 'v1', http=http_auth)
