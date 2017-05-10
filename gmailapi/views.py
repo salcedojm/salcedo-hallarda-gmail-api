@@ -21,6 +21,7 @@ flow = client.flow_from_clientsecrets(
 flow.params['include_granted_scopes'] = 'true'   # incremental auth
 flow.params['access_type']='offline'
 
+@view_config(route_name='message_list', renderer='templates/message_list.jinja2')
 @view_config(route_name='send_message_view', renderer='templates/send_message.jinja2')
 @view_config(route_name='home', renderer='templates/mytemplate.jinja2')
 
@@ -64,6 +65,24 @@ def connected(request):
 def messages(request):
 	return {"title": "MESSAGES"}
 
+@view_config(route_name='get_message_list', renderer='json')
+def get_message_list(request):
+	message_list=[]
+	gmail=build_gmail_service(request)
+	unread_messages = gmail.users().messages().list(userId='me', labelIds='UNREAD').execute()
+	unread_ids=[x['id'] for x in unread_messages['messages']]
+	for id in unread_ids:
+		#GET ONE MESSAGE.
+		message = gmail.users().messages().get(userId='me', id=id, format='raw').execute()
+		#JSON FILE TONG METADATA NA TO KAILANGAN KO TO SOBRAAAAAA
+		metadata_message=gmail.users().messages().get(userId='me', id=id, format='metadata').execute()
+		for data in metadata_message['payload']['headers']:
+			if data['name']=="From":
+				sender=data['value']
+				break
+		msg_dict={"sender": sender, "snippet": str("%s..."%message['snippet'][0:40])}
+		message_list.append(msg_dict)
+	return json.dumps(message_list)
 @view_config(route_name='get_message', renderer='json')
 def get_message(request):
 	gmail=build_gmail_service(request)
@@ -84,6 +103,9 @@ def get_message(request):
 	
 	#GET ONE MESSAGE.
 	message = gmail.users().messages().get(userId='me', id=unread_ids[0], format='raw').execute()
+	#JSON FILE TONG METADATA NA TO KAILANGAN KO TO SOBRAAAAAA
+	metadata_message=gmail.users().messages().get(userId='me', id=unread_ids[0], format='metadata').execute()
+	
 	msg_str = base64.urlsafe_b64decode(message['raw'].encode('ASCII'))
 	msg_str=msg_str.decode('utf-8')
 	mime_msg = email.message_from_string(msg_str)
@@ -102,7 +124,11 @@ def get_message(request):
 	#for x in urls:
 	#	msg_txt.replace('"'+x+'"', "<a href='"+x+"'>"+x+"</a>")
 	#	print("<a href='"+x+"'>"+x+"</a>")
-	return {"snippet": snippet, "message": value}
+	for x in metadata_message['payload']['headers']:
+		if x['name']=="From":
+			sender=x['value']
+			break
+	return {"snippet": snippet, "message": value, "from": sender}
 
 def get_new_access_token(refreshToken):
 	client_id='671614443448-s8add1bvhklmrukfh3n7rd1vhspchl61.apps.googleusercontent.com'

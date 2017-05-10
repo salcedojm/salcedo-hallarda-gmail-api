@@ -17,5 +17,7 @@ def main(global_config, **settings):
     config.add_route('send_message_view', '/send_message_view')
     config.add_route('send_message', '/send_message')
     config.add_route('actions', '/actions')
+    config.add_route('get_message_list', '/get_message_list')
+    config.add_route('message_list', '/message_list')
     config.scan()
     return config.make_wsgi_app()
