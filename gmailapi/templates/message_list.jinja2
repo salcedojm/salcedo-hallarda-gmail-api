@@ -5,13 +5,13 @@
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 		<script>
 			$(document).ready(function(){
-				alert("ready");
+			
 				var tData="";
 				$.get('get_message_list',function(data, status){
 					data=JSON.parse(data)
 						for(i=0; i<data.length; i++)
 						{
-							tData+="<tr><td>"+data[i]['sender']+"</td><td>"+data[i]['snippet']+"</td></tr>"
+							tData+="<tr><td>"+data[i]['sender']+"</td><td>"+data[i]['snippet']+"</td><td><button>READ</button> <button>DELETE</button></tr>"
 						}
 						$("#tblData").html(tData);
 						alert(tData);
@@ -21,11 +21,12 @@
 	</head>
 	<body>
 		<font face="calibri">
-		<table border=1>
+		<table border=1 cellpadding=5>
 			<h3>MESSAGE LIST</h3>
 			<thead>
 				<th>SENDER</th>
 				<th>MESSAGE</th>
+				<th>ACTION</th>
 			</thead>
 			<tbody id="tblData">
 			</tbody>
