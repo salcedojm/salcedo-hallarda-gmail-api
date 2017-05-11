@@ -1,9 +1,41 @@
-<!DOCTYPE html>
 <html>
 	<head>
 		<title>GMAIL API SAMPLE</title>
+	</head>
+	<body>
+		<div style="display: inline-block; width: 50%; border: 2px solid red; overflow-y: scroll; height: 600px">
+		<font face="calibri">
+			<table border=1 cellpadding=5>
+				<h3>MESSAGE LIST</h3>
+				<thead>
+					<th>SENDER</th>
+					<th>MESSAGE</th>
+					<th>ACTION</th>
+				</thead>
+				<tbody id="tblData">
+				</tbody>
+			</table>
+			<span id="loading">LOADING PLEASE WAIT</span>
+			</font>
+		</div>
+		<div style="display: inline-block; width: 45%; background-color: grey; border: 2px solid black; height: 600px;vertical-align: top; overflow-x: scroll;">
+			<h5>SENDER: </h5><br>
+			<span id="sender"></span><hr>
+			<h5>MESSAGE: </h5><br>
+			<span id="message"></span>
+		</div>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 		<script>
+			function view(msg_id)
+			{
+				$.post('get_message',
+				{
+					id: msg_id
+				},function(data,status){
+					$("#sender").html(data.from);
+					$("#message").html(data.message);
+				});
+			}
 			$(document).ready(function(){
 			
 				var tData="";
@@ -11,27 +43,12 @@
 					data=JSON.parse(data)
 						for(i=0; i<data.length; i++)
 						{
-							tData+="<tr><td>"+data[i]['sender']+"</td><td>"+data[i]['snippet']+"</td><td><button>READ</button> <button>DELETE</button></tr>"
+							tData+="<tr><td>"+data[i]['sender']+"</td><td>"+data[i]['snippet']+"</td><td><button onclick=\"view('"+data[i]['id']+"');\">READ</button> <button>DELETE</button></tr>";
+								//147568464
 						}
 						$("#tblData").html(tData);
-						alert(tData);
 					});
 			});
 		</script>
-	</head>
-	<body>
-		<font face="calibri">
-		<table border=1 cellpadding=5>
-			<h3>MESSAGE LIST</h3>
-			<thead>
-				<th>SENDER</th>
-				<th>MESSAGE</th>
-				<th>ACTION</th>
-			</thead>
-			<tbody id="tblData">
-			</tbody>
-		</table>
-		<span id="loading">LOADING PLEASE WAIT</span>
-		</font>
 	</body>
 </html>

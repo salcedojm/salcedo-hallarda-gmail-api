@@ -61,10 +61,6 @@ def connected(request):
 			set__tokenExpiration=int(credentials.token_response['expires_in'])+time.time())
 	return HTTPFound(location='actions')
 
-@view_config(route_name='messages', renderer='templates/messages.jinja2')
-def messages(request):
-	return {"title": "MESSAGES"}
-
 @view_config(route_name='get_message_list', renderer='json')
 def get_message_list(request):
 	message_list=[]
@@ -80,31 +76,16 @@ def get_message_list(request):
 			if data['name']=="From":
 				sender=data['value']
 				break
-		msg_dict={"sender": sender, "snippet": str("%s..."%message['snippet'][0:40])}
+		msg_dict={"sender": sender, "snippet": str("%s..."%message['snippet'][0:40]), "id": id}
 		message_list.append(msg_dict)
 	return json.dumps(message_list)
 @view_config(route_name='get_message', renderer='json')
 def get_message(request):
 	gmail=build_gmail_service(request)
-
-	fields = gmail.users().labels().list(userId='me').execute()
-	#GET ALL MESSAGE
-	
-	messages = gmail.users().messages().list(userId='me', q='').execute()
-	
-	#GET ALL MESSAGE ID's
-	message_ids=[x['id'] for x in messages['messages']]
-	
-	#GET UNREAD MESSAGES
-	unread_messages = gmail.users().messages().list(userId='me', labelIds='UNREAD').execute()
-	
-	#GET UNREAD MESSAGES ID's
-	unread_ids=[x['id'] for x in unread_messages['messages']]
-	
-	#GET ONE MESSAGE.
-	message = gmail.users().messages().get(userId='me', id=unread_ids[0], format='raw').execute()
+	msg_id=str(request.POST.get('id'))
+	message = gmail.users().messages().get(userId='me', id=msg_id, format='raw').execute()
 	#JSON FILE TONG METADATA NA TO KAILANGAN KO TO SOBRAAAAAA
-	metadata_message=gmail.users().messages().get(userId='me', id=unread_ids[0], format='metadata').execute()
+	metadata_message=gmail.users().messages().get(userId='me', id=msg_id, format='metadata').execute()
 	
 	msg_str = base64.urlsafe_b64decode(message['raw'].encode('ASCII'))
 	msg_str=msg_str.decode('utf-8')
@@ -118,7 +99,6 @@ def get_message(request):
 	snippet=message['snippet']
 	msg_txt=msg
 	urls=re.findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', msg_txt)
-
 	link = re.compile(r"((https?):((//)|(\\\\))+[\w\d:#@%/;$()~_?\+-=\\\.&]*)", re.MULTILINE|re.UNICODE)
 	value = link.sub(r'<a href="\1" target="_blank">\1</a>', msg_txt)
 	#for x in urls:
