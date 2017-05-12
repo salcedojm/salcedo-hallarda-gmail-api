@@ -16,11 +16,10 @@ import json, re, requests, httplib2, base64, email,time
 flow = client.flow_from_clientsecrets(
     r'C:\Users\Innovation\Desktop\salcedo-hallarda-gmail-api\gmailapi\client_secret.json',
     scope=[r'https://mail.google.com/'],
-    redirect_uri='http://localhost:6543/connected')       # offline access
+    redirect_uri='http://localhost:6543/connected')       
 
-flow.params['include_granted_scopes'] = 'true'   # incremental auth
+flow.params['include_granted_scopes'] = 'true'   
 flow.params['access_type']='offline'
-
 @view_config(route_name='message_list', renderer='templates/message_list.jinja2')
 @view_config(route_name='send_message_view', renderer='templates/send_message.jinja2')
 @view_config(route_name='home', renderer='templates/mytemplate.jinja2')
