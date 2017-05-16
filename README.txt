@@ -30,6 +30,13 @@ Getting Started
 	
 	pip install --upgrade google-api-python-client
 
+- Install mongoengine
+	
+	pip install mongoengine
+
+-Install requests
+	pip install requests
+
 - In gmailapi/templates/views.py LINE 17
 	Copy the directory of your client_secret.json file
 

@@ -14,12 +14,13 @@ from email.mime.multipart import MIMEMultipart
 import json, re, requests, httplib2, base64, email,time
 
 flow = client.flow_from_clientsecrets(
-    r'C:\Users\Innovation\Desktop\salcedo-hallarda-gmail-api\gmailapi\client_secret.json',
+    r'C:\Users\Innovation\Desktop\Files\salcedo-hallarda-gmail-api\gmailapi\client_secret.json',
     scope=[r'https://mail.google.com/'],
     redirect_uri='http://localhost:6543/connected')       
 
 flow.params['include_granted_scopes'] = 'true'   
 flow.params['access_type']='offline'
+flow.params['approval_prompt']='force'
 @view_config(route_name='message_list', renderer='templates/message_list.jinja2')
 @view_config(route_name='send_message_view', renderer='templates/send_message.jinja2')
 @view_config(route_name='home', renderer='templates/mytemplate.jinja2')
@@ -161,12 +162,14 @@ def send_message(request):
 		return{"response":str('An error occurred: {error}')}
 
 def build_gmail_service(request):
-	emailAddress=request.session['emailAddress']
+	emailAddress='john.salcedo@tenelleven.com'
 	credential_storage=Storage('credentials/%s.dat' % emailAddress)
 	credentials=credential_storage.get()
 	#check if token has expired. if true then retrieve new access token
 	if is_token_expired(str(emailAddress)):
-		token_data=get_new_access_token(credentials.refresh_token)
+		refreshToken=str(Users.objects(email=emailAddress)[0]['refreshToken'])
+		token_data=get_new_access_token(refreshToken)
+		print(credentials)
 		credentials.access_token=token_data['access_token']
 		credentials.token_response['access_token']=token_data['access_token']
 		credentials.token_response['expires_in']=token_data['expires_in']
