@@ -111,8 +111,8 @@ def get_message(request):
 	return {"snippet": snippet, "message": value, "from": sender}
 
 def get_new_access_token(refreshToken):
-	client_id='671614443448-s8add1bvhklmrukfh3n7rd1vhspchl61.apps.googleusercontent.com'
-	client_secret='8GruaReu0qjYemohKNrgzj-1'
+	client_id='XXXXXXX'
+	client_secret='XXXXXXXXX'
 	grant_type='refresh_token'
 	url='https://www.googleapis.com/oauth2/v4/token'
 	post_fields={'client_id': client_id, 'client_secret': client_secret, 'refresh_token': refreshToken, 'grant_type': grant_type}
@@ -162,7 +162,7 @@ def send_message(request):
 		return{"response":str('An error occurred: {error}')}
 
 def build_gmail_service(request):
-	emailAddress='john.salcedo@tenelleven.com'
+	emailAddress='XXXXXXXX'
 	credential_storage=Storage('credentials/%s.dat' % emailAddress)
 	credentials=credential_storage.get()
 	#check if token has expired. if true then retrieve new access token
